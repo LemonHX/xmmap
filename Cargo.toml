@@ -13,7 +13,7 @@ keywords = ["mmap", "memory-map", "io", "file"]
 libc = "0.2"
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version =  "0.3", features = ["memoryapi", "sysinfoapi", "fileapi", "handleapi", "processthreadsapi", "securitybaseapi"] }
+winapi = { version =  "0.3", features = ["memoryapi", "sysinfoapi", "fileapi", "handleapi", "processthreadsapi", "securitybaseapi", "winbase"] }
 widestring = "1.0.1"
 
 [dev-dependencies]

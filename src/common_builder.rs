@@ -11,6 +11,7 @@ pub trait CommonMmapBuilder {
     // getter
     fn offset(&self) -> u64;
     fn len(&self) -> usize;
+    fn is_empty(&self) -> bool;
     fn discriptor(&self) -> Option<RawDescriptor>;
     fn read(&self) -> bool;
     fn write(&self) -> bool;
@@ -70,5 +71,9 @@ impl CommonMmapBuilder for MmapBuilder {
 
     fn execute(&self) -> bool {
         self.execute
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len == 0
     }
 }

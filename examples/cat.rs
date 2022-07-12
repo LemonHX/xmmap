@@ -6,12 +6,11 @@ use std::{
 use winapi::um::fileapi::{GetFileInformationByHandle, BY_HANDLE_FILE_INFORMATION};
 use xmmap::{CommonMmapBuilder, Mmap, RawDescriptor};
 
-pub fn file_len(handle: RawHandle) -> std::io::Result<u64> {
-    let info = unsafe {
+pub unsafe fn file_len(handle: RawHandle) -> std::io::Result<u64> {
+    let info = {
         let mut info = std::mem::MaybeUninit::<BY_HANDLE_FILE_INFORMATION>::uninit();
 
-        let ok = GetFileInformationByHandle(handle, info.as_mut_ptr());
-        if ok == 0 {
+        if GetFileInformationByHandle(handle, info.as_mut_ptr()) == 0 {
             return Err(std::io::Error::last_os_error());
         }
 
@@ -31,7 +30,7 @@ fn main() -> std::io::Result<()> {
     let mmap = Mmap::builder()
         .set_discriptor(RawDescriptor(file.as_raw_handle()))
         .set_read(true)
-        .set_len(file_len(file.as_raw_handle())? as usize)
+        .set_len(unsafe { file_len(file.as_raw_handle()) }? as usize)
         .build()?;
     let slice = mmap.as_slice();
     std::io::stdout().write_all(slice)?;

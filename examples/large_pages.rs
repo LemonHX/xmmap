@@ -9,7 +9,7 @@ fn main() -> std::io::Result<()> {
         .set_len(1024 * 2048 as usize)
         .set_huge_page(true)
         .build()?;
-    let mutmmap = mmap.as_mut();
+    let mut mutmmap = mmap.as_mut();
     let slice = mutmmap.as_slice();
     let hello = b"hello from 2MB sized large page~!\n";
     unsafe {

@@ -1,3 +1,5 @@
+#![allow(clippy::zst_offset)]
+
 use std::{os::windows::prelude::RawHandle, slice};
 
 use widestring::U16CString;
@@ -24,7 +26,7 @@ use winapi::{
     },
 };
 
-use crate::{Access, CommonMmapMut, MmapBuilder, MmapRawDescriptor};
+use crate::{CommonMmapMut, MmapBuilder, MmapRawDescriptor};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RawDescriptor(pub RawHandle);
@@ -160,7 +162,7 @@ impl MmapBuilder {
                     })
                 } else {
                     UnmapViewOfFile(ptr);
-                    return Err(std::io::Error::last_os_error());
+                    Err(std::io::Error::last_os_error())
                 }
             }
         }
@@ -307,7 +309,7 @@ impl Mmap {
 
     pub fn as_mut(&self) -> MmapMut {
         MmapMut {
-            handle: self.handle.clone(),
+            handle: self.handle,
             ptr: self.ptr,
             len: self.len,
         }
@@ -339,7 +341,7 @@ impl Drop for Mmap {
 }
 
 impl CommonMmapMut for MmapMut {
-    fn as_slice(&self) -> &mut [u8] {
+    fn as_slice(&mut self) -> &mut [u8] {
         unsafe { slice::from_raw_parts_mut(self.ptr as *mut _, self.len) }
     }
 
@@ -353,7 +355,7 @@ impl CommonMmapMut for MmapMut {
 
     fn flush_range(&self, offset: usize, len: usize) -> std::io::Result<()> {
         self.flush_range_non_blocking(offset, len)?;
-        if let Some(_) = &self.handle {
+        if self.handle.is_some() {
             self.block_on_flush()?;
         }
         Ok(())

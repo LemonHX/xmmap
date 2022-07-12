@@ -8,12 +8,6 @@ pub mod windows;
 #[cfg(windows)]
 pub use windows::*;
 
-pub trait Access {
-    fn read(&self) -> bool;
-    fn write(&self) -> bool;
-    fn execute(&self) -> bool;
-}
-
 pub trait MmapRawDescriptor {
     fn raw_descriptor(&self) -> RawDescriptor;
 }
@@ -37,13 +31,13 @@ pub struct MmapBuilder {
     // ===== common huge page extra =====
     pub(crate) huge_page: bool,
     // ===== unix common extra =====
-    pub(crate) advice_normal: bool,
-    pub(crate) advice_sequential: bool,
-    pub(crate) advice_random: bool,
-    pub(crate) advice_willneed: bool,
-    pub(crate) advice_dontneed: bool,
-    pub(crate) unix_flags: Option<Vec<u32>>,
-    pub(crate) unix_advices: Option<Vec<u32>>,
+    // pub(crate) advice_normal: bool,
+    // pub(crate) advice_sequential: bool,
+    // pub(crate) advice_random: bool,
+    // pub(crate) advice_willneed: bool,
+    // pub(crate) advice_dontneed: bool,
+    // pub(crate) unix_flags: Option<Vec<u32>>,
+    // pub(crate) unix_advices: Option<Vec<u32>>,
 
     // ===== windows extra =====
     /// write and copy_on_write are exclusive
@@ -56,7 +50,7 @@ pub trait CommonMmapMut {
     fn flush_range(&self, offset: usize, len: usize) -> std::io::Result<()>;
     fn flush_range_non_blocking(&self, offset: usize, len: usize) -> std::io::Result<()>;
     fn block_on_flush(&self) -> std::io::Result<()>;
-    fn as_slice(&self) -> &mut [u8];
+    fn as_slice(&mut self) -> &mut [u8];
 }
 
 pub mod common_huge_page {
