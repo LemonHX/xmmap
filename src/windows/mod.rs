@@ -1,6 +1,9 @@
 #![allow(clippy::zst_offset)]
 
-use std::{os::windows::prelude::RawHandle, slice};
+use std::{
+    os::windows::prelude::{AsRawHandle, RawHandle},
+    slice,
+};
 
 use widestring::U16CString;
 use winapi::{
@@ -37,9 +40,9 @@ impl MmapRawDescriptor for RawDescriptor {
     }
 }
 
-impl From<RawHandle> for RawDescriptor {
-    fn from(handle: RawHandle) -> Self {
-        RawDescriptor(handle)
+impl<T: AsRawHandle> From<T> for RawDescriptor {
+    fn from(handle: T) -> Self {
+        RawDescriptor(handle.as_raw_handle())
     }
 }
 
@@ -59,6 +62,7 @@ fn allocation_granularity() -> usize {
 
 impl MmapBuilder {
     pub fn build(self) -> std::io::Result<Mmap> {
+        // TODO: large page + offset
         // create access and protection flags
         let (access, protection) = match (self.read, self.write, self.execute) {
             (true, true, true) => {
@@ -294,19 +298,11 @@ pub trait MmapBuilderWindowsExt {
 #[derive(Clone)]
 pub struct Mmap {
     handle: Option<RawHandle>,
-    ptr: *mut c_void,
-    len: usize,
+    pub(crate) ptr: *mut c_void,
+    pub(crate) len: usize,
 }
 
 impl Mmap {
-    pub fn builder() -> MmapBuilder {
-        MmapBuilder::default()
-    }
-
-    pub fn as_slice(&self) -> &[u8] {
-        unsafe { slice::from_raw_parts(self.ptr as *mut _, self.len) }
-    }
-
     pub fn as_mut(&self) -> MmapMut {
         MmapMut {
             handle: self.handle,

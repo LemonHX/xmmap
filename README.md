@@ -30,18 +30,18 @@ and the API of memmap is not very user friendly.
 - [x] first class windows support
 - [ ] 🚧 copy on write
 ## Unix
-- [ ] 🚧 Unix Flags
-- [ ] 🚧 Unix advice
+- [x] 🚧 Unix Flags
+- [x] 🚧 Unix Advise
 ### Linux
 - [ ] 🚧 Linux Flags
-- [ ] 🚧 Linux advice
+- [ ] 🚧 Linux Advise
 ### BSD
 - [ ] 🚧 BSD Flags
-- [ ] 🚧 BSD advice
+- [ ] 🚧 BSD Advise
 
 ### MacOS: **Donate me a Mac if you'd like to.**
 - [ ] 🚧 MacOS Flags
-- [ ] 🚧 MacOS advice
+- [ ] 🚧 MacOS Advise
 
 # Targets
 cpu architectures

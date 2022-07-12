@@ -1,5 +1,7 @@
 mod common_builder;
 
+use std::slice;
+
 // default export the common builder
 pub use common_builder::*;
 
@@ -7,6 +9,11 @@ pub use common_builder::*;
 pub mod windows;
 #[cfg(windows)]
 pub use windows::*;
+
+#[cfg(unix)]
+pub mod unix;
+#[cfg(unix)]
+pub use unix::*;
 
 pub trait MmapRawDescriptor {
     fn raw_descriptor(&self) -> RawDescriptor;
@@ -31,14 +38,20 @@ pub struct MmapBuilder {
     // ===== common huge page extra =====
     pub(crate) huge_page: bool,
     // ===== unix common extra =====
-    // pub(crate) advice_normal: bool,
-    // pub(crate) advice_sequential: bool,
-    // pub(crate) advice_random: bool,
-    // pub(crate) advice_willneed: bool,
-    // pub(crate) advice_dontneed: bool,
-    // pub(crate) unix_flags: Option<Vec<u32>>,
-    // pub(crate) unix_advices: Option<Vec<u32>>,
-
+    /// the flag is shared but default is false
+    /// so I decided to use `private` instead of `shared`
+    pub(crate) private: bool,
+    pub(crate) advise_normal: bool,
+    pub(crate) advise_sequential: bool,
+    pub(crate) advise_random: bool,
+    pub(crate) advise_willneed: bool,
+    pub(crate) advise_dontneed: bool,
+    // ===== unix map stack extra =====
+    pub(crate) map_stack: bool,
+    // ===== linux extra =====
+    pub(crate) map_populate: bool,
+    pub(crate) huge_page_2mb: bool,
+    pub(crate) huge_page_1gb: bool,
     // ===== windows extra =====
     /// write and copy_on_write are exclusive
     pub(crate) copy_on_write: bool,
@@ -65,5 +78,15 @@ pub mod common_huge_page {
             self.huge_page = huge_page;
             self
         }
+    }
+}
+
+impl Mmap {
+    pub fn builder() -> MmapBuilder {
+        MmapBuilder::default()
+    }
+
+    pub fn as_slice(&self) -> &[u8] {
+        unsafe { slice::from_raw_parts(self.ptr as *mut _, self.len) }
     }
 }
