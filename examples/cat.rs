@@ -40,7 +40,7 @@ fn main() -> std::io::Result<()> {
 
     let mmap = Mmap::builder()
         .set_len(unsafe { file_len(&file) }? as usize)
-        .set_discriptor(RawDescriptor::from(file))
+        .set_discriptor(RawDescriptor::from(&file))
         .set_read(true)
         .build()?;
     let slice = mmap.as_slice();

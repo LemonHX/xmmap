@@ -40,8 +40,8 @@ impl MmapRawDescriptor for RawDescriptor {
     }
 }
 
-impl<T: AsRawHandle> From<T> for RawDescriptor {
-    fn from(handle: T) -> Self {
+impl<T: AsRawHandle> From<&T> for RawDescriptor {
+    fn from(handle: &T) -> Self {
         RawDescriptor(handle.as_raw_handle())
     }
 }

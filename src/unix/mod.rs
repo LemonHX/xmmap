@@ -5,8 +5,8 @@ use crate::{MmapBuilder, MmapRawDescriptor};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RawDescriptor(pub RawFd);
 
-impl<T: AsRawFd> From<T> for RawDescriptor {
-    fn from(t: T) -> Self {
+impl<T: AsRawFd> From<&T> for RawDescriptor {
+    fn from(t: &T) -> Self {
         RawDescriptor(t.as_raw_fd())
     }
 }
