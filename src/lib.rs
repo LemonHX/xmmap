@@ -50,7 +50,6 @@ pub struct MmapBuilder {
     pub(crate) map_stack: bool,
     // ===== linux extra =====
     pub(crate) map_populate: bool,
-    pub(crate) huge_page_2mb: bool,
     pub(crate) huge_page_1gb: bool,
     // ===== windows extra =====
     /// write and copy_on_write are exclusive

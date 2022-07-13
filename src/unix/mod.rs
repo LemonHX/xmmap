@@ -111,12 +111,14 @@ impl MmapBuilder {
                 "invalid access",
             )),
         }?;
+        let mut flags = flags;
         // populate
-        let flags = if self.map_populate {
-            flags | libc::MAP_POPULATE
-        } else {
-            flags
-        };
+        #[cfg(target_os = "linux")]
+        {
+            if self.map_populate {
+                flags |= libc::MAP_POPULATE;
+            }
+        }
         let (flags, raw_desc) = if let Some(fd) = self.descriptor {
             (flags, fd.0)
         } else {
