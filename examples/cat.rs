@@ -32,9 +32,7 @@ pub unsafe fn file_len<T: AsRawFd>(handle: &T) -> std::io::Result<u64> {
 }
 
 fn main() -> std::io::Result<()> {
-    let path = std::env::args()
-        .nth(1)
-        .expect("supply a single path as the program argument");
+    let path = "/Users/yiweiyang/project/xmmap/a";
 
     let file = std::fs::File::open(path).expect("failed to open the file");
 

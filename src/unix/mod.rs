@@ -156,6 +156,15 @@ impl MmapBuilder {
                     flags | libc::MAP_HUGE_2MB
                 }
             }
+            #[cfg(target_os = "macos")]
+            {
+                if self.huge_page_1gb {
+                    flags | libc::SUPERPAGE_SIZE_ANY
+                } else {
+                    flags | libc::SUPERPAGE_SIZE_2MB
+                }
+            }
+            #[cfg(not(target_os = "macos"))]
             #[cfg(not(target_os = "linux"))]
             {
                 unimplemented!()
@@ -205,6 +214,11 @@ impl MmapBuilder {
                         2 * 1024 * 1024
                     } as u64
             }
+            #[cfg(target_os = "macos")]
+            {
+                self.offset % 2 * 1024 * 1024 as u64
+            }
+            #[cfg(not(target_os = "macos"))]
             #[cfg(not(target_os = "linux"))]
             {
                 unimplemented!()
