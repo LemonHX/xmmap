@@ -6,7 +6,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  check:
+  check-fmt:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -20,20 +20,7 @@ jobs:
         target: x86_64-pc-windows-gnu
 
     - name: Run fmt checks
-      env:
-        CLIPPY_OPTS: --all-targets -- --allow clippy::len_without_is_empty --allow clippy::missing_safety_doc
-      run: |
-        cargo fmt -- --check
-    - name: Run check cross compile
-      env:
-          CLIPPY_OPTS: --all-targets -- --allow clippy::len_without_is_empty --allow clippy::missing_safety_doc
-      run: |
-        cargo clippy --target x86_64-pc-windows-gnu $CLIPPY_OPTS
-      # cargo clippy --target x86_64-unknown-linux-gnu $CLIPPY_OPTS
-      # cargo clippy --target x86_64-apple-darwin $CLIPPY_OPTS
-      # cargo clippy --target aarch64-apple-darwin $CLIPPY_OPTS
-
-
+      run: cargo fmt -- --check
 
   test-win:
     runs-on: windows-latest
@@ -49,17 +36,35 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Set default target
-      run: rustup default stable-${{ matrix.target }}
+      run: |
+        rustup default stable-${{ matrix.target }}
+        rustup component add clippy
 
+    - name: Run clippy
+      run: cargo clippy
+    
     - name: Run tests
       run: cargo test --all-features
 
   test-macos:
     runs-on: macos-latest
+    strategy:
+      matrix:
+        target:
+          - x86_64-apple-darwin
+        # - aarch64-apple-darwin
     steps:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Set default target
+      run: |
+        rustup default stable-${{ matrix.target }}
+        rustup component add clippy
+
+    - name: Run clippy
+      run: cargo clippy
+    
     - name: Run tests
       run: cargo test --all-features
 
@@ -68,6 +73,7 @@ jobs:
     strategy:
       matrix:
         target:
+          # i686 /usr/bin/ld: cannot find Scrt1.o
           - i686-unknown-linux-gnu
           - x86_64-unknown-linux-gnu
     steps:
@@ -75,7 +81,12 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Set default target
-      run: rustup default stable-${{ matrix.target }}
+      run: |
+        rustup default stable-${{ matrix.target }}
+        rustup component add clippy
 
+    - name: Run clippy
+      run: cargo clippy
+    
     - name: Run tests
       run: cargo test --all-features
