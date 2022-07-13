@@ -1,4 +1,7 @@
-use std::os::unix::prelude::{AsRawFd, RawFd};
+use std::{
+    os::unix::prelude::{AsRawFd, RawFd},
+    sync::atomic::{AtomicUsize, Ordering},
+};
 
 use crate::{MmapBuilder, MmapRawDescriptor};
 
@@ -58,6 +61,21 @@ impl Drop for Mmap {
         unsafe {
             libc::munmap(self.ptr, self.len as _);
         }
+    }
+}
+
+fn page_size() -> usize {
+    static PAGE_SIZE: AtomicUsize = AtomicUsize::new(0);
+
+    match PAGE_SIZE.load(Ordering::Relaxed) {
+        0 => {
+            let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) as usize };
+
+            PAGE_SIZE.store(page_size, Ordering::Relaxed);
+
+            page_size
+        }
+        page_size => page_size,
     }
 }
 
@@ -130,12 +148,9 @@ impl MmapBuilder {
         let flags = if self.huge_page {
             #[cfg(target_os = "linux")]
             {
-                if self.huge_page_2mb {
-                    flags | libc::MAP_HUGE_2MB
-                } else if self.huge_page_1gb {
+                if self.huge_page_1gb {
                     flags | libc::MAP_HUGE_1GB
                 } else {
-                    // THB is bad
                     flags | libc::MAP_HUGE_2MB
                 }
             }
@@ -178,14 +193,32 @@ impl MmapBuilder {
                 "only one of normal, sequential, and random is supported",
             ));
         }
-
+        let alignment = if self.huge_page {
+            #[cfg(target_os = "linux")]
+            {
+                self.offset
+                    % if self.huge_page_1gb {
+                        1024 * 1024 * 1024
+                    } else {
+                        2 * 1024 * 1024
+                    } as u64
+            }
+            #[cfg(not(target_os = "linux"))]
+            {
+                unimplemented!()
+            }
+        } else {
+            self.offset % page_size() as u64
+        };
+        let aligned_offset = self.offset - alignment;
+        let aligned_len = self.len + alignment as usize;
         // `libc::mmap` does not support zero-size mappings. POSIX defines:
         //
         // https://pubs.opengroup.org/onlinepubs/9699919799/functions/mmap.html
         // > If `len` is zero, `mmap()` shall fail and no mapping shall be established.
         //
         // So if we would create such a mapping, crate a one-byte mapping instead:
-        let aligned_len = self.len.max(1);
+        let aligned_len = aligned_len.max(1);
         unsafe {
             let ptr = libc::mmap(
                 std::ptr::null_mut(),
@@ -193,7 +226,7 @@ impl MmapBuilder {
                 protection,
                 flags,
                 raw_desc,
-                self.offset as libc::off_t,
+                aligned_offset as libc::off_t,
             );
             if ptr == libc::MAP_FAILED {
                 Err(std::io::Error::last_os_error())
