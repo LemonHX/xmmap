@@ -255,3 +255,6 @@ impl MmapBuilder {
         }
     }
 }
+
+unsafe impl Send for MmapBuilder {}
+unsafe impl Sync for MmapBuilder {}

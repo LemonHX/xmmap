@@ -378,3 +378,6 @@ impl CommonMmapMut for MmapMut {
         }
     }
 }
+
+unsafe impl Send for MmapBuilder {}
+unsafe impl Sync for MmapBuilder {}
